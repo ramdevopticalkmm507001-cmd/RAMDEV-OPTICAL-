@@ -1,0 +1,23 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ramdev Opticals Admin</title>
+<style>
+body{font-family:system-ui;margin:0;background:#f5f7fb;color:#172033}header{background:#111827;color:#fff;padding:18px 22px}main{max-width:1100px;margin:24px auto;padding:0 16px}.card{background:#fff;border-radius:15px;padding:18px;margin-bottom:18px;box-shadow:0 4px 18px #0001}input,select,button{padding:9px;border:1px solid #ddd;border-radius:8px;margin:4px}button{cursor:pointer}.danger{color:#b91c1c}.ok{color:#166534}table{width:100%;border-collapse:collapse}th,td{padding:9px;border-bottom:1px solid #eee;text-align:left}
+</style></head><body><header><b>RAMDEV OPTICALS — ADMIN</b></header><main>
+<div id="login" class="card"><h2>Admin Login</h2><input id="token" type="password" placeholder="ADMIN_TOKEN"><button onclick="login()">Login</button><p id="msg"></p></div>
+<div id="dash" style="display:none">
+<div class="card"><button onclick="logout()">Logout</button><h2>Orders</h2><div id="orders">Loading...</div></div>
+<div class="card"><h2>Add Product</h2><form id="pf"><input id="pn" placeholder="Name" required><input id="pc" placeholder="Category" required><input id="pp" type="number" placeholder="Price" required><input id="pi" placeholder="Image URL"><button>Add</button></form><div id="products"></div></div>
+</div></main>
+<script>
+let token=sessionStorage.getItem("ramdevAdminToken")||"";
+const H=()=>({"Content-Type":"application/json","Authorization":"Bearer "+token});
+function show(){loginEl.style.display="none";dash.style.display="block";loadOrders();loadProducts()}
+async function login(){token=document.getElementById("token").value.trim();let r=await fetch("/api/orders",{headers:H()});if(!r.ok){msg.textContent="Invalid token";return}sessionStorage.setItem("ramdevAdminToken",token);show()}
+function logout(){sessionStorage.removeItem("ramdevAdminToken");location.reload()}
+async function loadOrders(){let r=await fetch("/api/orders",{headers:H()}),d=await r.json();orders.innerHTML=d.length?`<table><tr><th>ID</th><th>Customer</th><th>Total</th><th>Payment</th><th>Status</th><th>Actions</th></tr>${d.map(o=>`<tr><td>#${o.id}</td><td>${o.customer_name}<br>${o.mobile}</td><td>₹${o.total}</td><td>${o.payment_status}</td><td>${o.order_status}</td><td><select onchange="setStatus(${o.id},this.value)"><option>new</option><option>confirmed</option><option>processing</option><option>shipped</option><option>delivered</option><option>cancelled</option></select><button onclick="paid(${o.id})">Mark paid</button></td></tr>`).join("")}</table>`:"No orders yet."}
+async function setStatus(id,s){await fetch("/api/orders/"+id+"/status",{method:"PATCH",headers:H(),body:JSON.stringify({order_status:s})});loadOrders()}
+async function paid(id){let paymentId=prompt("PhonePe payment/reference ID (optional):")||null;await fetch("/api/payments/admin-confirm",{method:"POST",headers:H(),body:JSON.stringify({orderId:id,paymentId})});loadOrders()}
+async function loadProducts(){let r=await fetch("/api/products",{headers:H()}),d=await r.json();products.innerHTML=d.map(p=>`<p><b>${p.name}</b> — ${p.category} — ₹${p.price}</p>`).join("")||"No products added in backend."}
+pf.onsubmit=async e=>{e.preventDefault();await fetch("/api/products",{method:"POST",headers:H(),body:JSON.stringify({name:pn.value,category:pc.value,price:pp.value,image:pi.value})});pf.reset();loadProducts()}
+if(token)show();
+</script></body></html>
