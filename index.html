@@ -11,6 +11,16 @@ body{font-family:system-ui;margin:0;background:#f5f7fb;color:#172033}header{back
 <script>
 let token=sessionStorage.getItem("ramdevAdminToken")||"";
 const H=()=>({"Content-Type":"application/json","Authorization":"Bearer "+token});
+  const loginEl = document.getElementById("login");
+const dash = document.getElementById("dash");
+const msg = document.getElementById("msg");
+const orders = document.getElementById("orders");
+const products = document.getElementById("products");
+const pf = document.getElementById("pf");
+const pn = document.getElementById("pn");
+const pc = document.getElementById("pc");
+const pp = document.getElementById("pp");
+const pi = document.getElementById("pi");
 function show(){loginEl.style.display="none";dash.style.display="block";loadOrders();loadProducts()}
 async function login(){token=document.getElementById("token").value.trim();let r=await fetch("/api/orders",{headers:H()});if(!r.ok){msg.textContent="Invalid token";return}sessionStorage.setItem("ramdevAdminToken",token);show()}
 function logout(){sessionStorage.removeItem("ramdevAdminToken");location.reload()}
