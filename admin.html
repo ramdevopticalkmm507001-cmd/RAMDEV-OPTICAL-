@@ -1,9 +1,12 @@
+
+
 <!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Ramdev Opticals Admin</title>
+
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,sans-serif;background:#f4f6fb;color:#172033}
@@ -12,6 +15,7 @@ main{max-width:1100px;margin:25px auto;padding:15px}
 .box{background:white;padding:20px;border-radius:14px;margin-bottom:18px;box-shadow:0 3px 15px #0001}
 input,select,button{padding:11px;border:1px solid #ddd;border-radius:8px;margin:5px;max-width:100%}
 button{cursor:pointer;background:#2563eb;color:white;border:0}
+button:disabled{opacity:.6;cursor:not-allowed}
 #login{max-width:400px;margin:100px auto}
 #login input{width:100%;margin:10px 0}
 #login button{width:100%}
@@ -27,9 +31,19 @@ table{width:100%;border-collapse:collapse}
 th,td{text-align:left;padding:10px;border-bottom:1px solid #eee}
 .message{margin-top:10px;color:#166534}
 .error{color:#dc2626}
-@media(max-width:600px){.stats{grid-template-columns:1fr 1fr}main{padding:10px}.box{padding:12px}table{font-size:12px}}
+.upload-area{border:2px dashed #9ca3af;padding:20px;border-radius:12px;text-align:center;margin:10px 0}
+#imagePreview{display:none;width:160px;height:160px;object-fit:contain;border-radius:12px;border:1px solid #ddd;margin:12px auto}
+.product-image{width:65px;height:65px;object-fit:contain;border-radius:8px}
+.table-wrap{overflow-x:auto}
+@media(max-width:600px){
+.stats{grid-template-columns:1fr 1fr}
+main{padding:10px}
+.box{padding:12px}
+table{font-size:12px}
+}
 </style>
 </head>
+
 <body>
 
 <header>
@@ -77,15 +91,34 @@ th,td{text-align:left;padding:10px;border-bottom:1px solid #eee}
 
 <section id="products" class="page">
 <h2>Manage Products</h2>
+
 <div class="box">
 <h3>Add New Product</h3>
+
 <input id="pname" placeholder="Product name">
 <input id="pcat" placeholder="Category">
 <input id="pprice" type="number" placeholder="Price">
-<input id="pimage" placeholder="Image URL">
-<button onclick="addProduct()">Add Product</button>
+
+<div class="upload-area">
+<h3>📸 Upload Product Photo</h3>
+<p>Select photo directly from your mobile gallery.</p>
+
+<input
+id="pimage"
+type="file"
+accept="image/*"
+onchange="previewProductImage(event)"
+>
+
+<img id="imagePreview" alt="Product Preview">
+
+<p id="imageInfo"></p>
+</div>
+
+<button id="addProductBtn" onclick="addProduct()">Add Product</button>
 <p id="productMsg"></p>
 </div>
+
 <div class="box">
 <h3>Product List</h3>
 <div id="productList">Loading...</div>
@@ -106,7 +139,14 @@ th,td{text-align:left;padding:10px;border-bottom:1px solid #eee}
 </main>
 
 <script>
-let token=sessionStorage.getItem("ramdevAdminToken")||"";
+
+// CLOUDINARY SETTINGS
+// Replace these two values with your own Cloudinary details.
+
+const CLOUDINARY_CLOUD_NAME = "YOUR_CLOUD_NAME";
+const CLOUDINARY_UPLOAD_PRESET = "YOUR_UPLOAD_PRESET";
+
+let token = sessionStorage.getItem("ramdevAdminToken") || "";
 
 function headers(){
 return {
@@ -115,7 +155,9 @@ return {
 };
 }
 
-function login(){
+// LOGIN
+
+async function login(){
 const value=document.getElementById("token").value.trim();
 const msg=document.getElementById("loginMsg");
 
@@ -128,16 +170,18 @@ return;
 token=value;
 msg.textContent="Checking login...";
 
-fetch("/api/orders",{headers:headers()})
-.then(async response=>{
+try{
+const response=await fetch("/api/orders",{headers:headers()});
+
 if(!response.ok) throw new Error("Invalid admin token");
+
 sessionStorage.setItem("ramdevAdminToken",token);
 openDashboard();
-})
-.catch(error=>{
+
+}catch(error){
 msg.textContent=error.message;
 msg.className="error";
-});
+}
 }
 
 function openDashboard(){
@@ -154,18 +198,26 @@ location.reload();
 function showPage(id){
 document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
 document.getElementById(id).classList.add("active");
+
 if(id==="orders")loadOrders();
 if(id==="products")loadProducts();
 if(id==="customers")loadCustomers();
 if(id==="payments")loadPayments();
 }
 
+// SECURITY
+
 function escapeHTML(value){
 return String(value??"").replace(/[&<>"']/g,c=>({
-"&":"&amp;","<":"&lt;",">":"&gt;",
-'"':"&quot;","'":"&#39;"
+"&":"&amp;",
+"<":"&lt;",
+">":"&gt;",
+'"':"&quot;",
+"'":"&#39;"
 }[c]));
 }
+
+// ORDERS
 
 async function getOrders(){
 const response=await fetch("/api/orders",{headers:headers()});
@@ -176,11 +228,23 @@ return response.json();
 async function loadAll(){
 try{
 const data=await getOrders();
+
 document.getElementById("totalOrders").textContent=data.length;
-document.getElementById("revenue").textContent="₹"+data.reduce((s,o)=>s+Number(o.total||0),0).toLocaleString("en-IN");
-document.getElementById("pending").textContent=data.filter(o=>o.order_status==="new").length;
-document.getElementById("paid").textContent=data.filter(o=>o.payment_status==="paid").length;
-document.getElementById("recentOrders").innerHTML=data.slice(0,5).map(o=>`<p>#${o.id} — ${escapeHTML(o.customer_name)} — ₹${o.total}</p>`).join("")||"No orders yet.";
+
+document.getElementById("revenue").textContent=
+"₹"+data.reduce((s,o)=>s+Number(o.total||0),0).toLocaleString("en-IN");
+
+document.getElementById("pending").textContent=
+data.filter(o=>o.order_status==="new").length;
+
+document.getElementById("paid").textContent=
+data.filter(o=>o.payment_status==="paid").length;
+
+document.getElementById("recentOrders").innerHTML=
+data.slice(0,5).map(o=>
+`<p>#${o.id} — ${escapeHTML(o.customer_name)} — ₹${o.total}</p>`
+).join("")||"No orders yet.";
+
 }catch(e){
 document.getElementById("recentOrders").textContent=e.message;
 }
@@ -188,140 +252,359 @@ document.getElementById("recentOrders").textContent=e.message;
 
 async function loadOrders(){
 const box=document.getElementById("ordersList");
+
 try{
 const data=await getOrders();
-if(!data.length){box.textContent="No orders yet.";return;}
-box.innerHTML=`<table>
-<tr><th>ID</th><th>Customer</th><th>Total</th><th>Payment</th><th>Status</th><th>Action</th></tr>
+
+if(!data.length){
+box.textContent="No orders yet.";
+return;
+}
+
+box.innerHTML=`<div class="table-wrap"><table>
+<tr>
+<th>ID</th><th>Customer</th><th>Total</th>
+<th>Payment</th><th>Status</th><th>Action</th>
+</tr>
+
 ${data.map(o=>`<tr>
 <td>#${o.id}</td>
 <td>${escapeHTML(o.customer_name)}<br>${escapeHTML(o.mobile)}</td>
 <td>₹${o.total}</td>
 <td>${escapeHTML(o.payment_status)}</td>
-<td><select onchange="setStatus(${o.id},this.value)">
-${["new","confirmed","processing","shipped","delivered","cancelled"].map(s=>`<option ${s===o.order_status?"selected":""}>${s}</option>`).join("")}
-</select></td>
-<td><button onclick="markPaid(${o.id})">Mark Paid</button></td>
-</tr>`).join("")}</table>`;
-}catch(e){box.textContent=e.message;}
+<td>
+<select onchange="setStatus(${Number(o.id)},this.value)">
+${["new","confirmed","processing","shipped","delivered","cancelled"].map(s=>
+`<option value="${s}" ${s===o.order_status?"selected":""}>${s}</option>`
+).join("")}
+</select>
+</td>
+<td><button onclick="markPaid(${Number(o.id)})">Mark Paid</button></td>
+</tr>`).join("")}
+</table></div>`;
+
+}catch(e){
+box.textContent=e.message;
+}
 }
 
 async function setStatus(id,status){
 const r=await fetch("/api/orders/"+id+"/status",{
-method:"PATCH",headers:headers(),
+method:"PATCH",
+headers:headers(),
 body:JSON.stringify({order_status:status})
 });
-if(!r.ok){alert("Status update failed");return;}
-loadOrders();loadAll();
+
+if(!r.ok){
+alert("Status update failed");
+return;
+}
+
+loadOrders();
+loadAll();
 }
 
 async function markPaid(id){
 const paymentId=prompt("Payment reference ID (optional):");
 if(paymentId===null)return;
+
 const r=await fetch("/api/payments/admin-confirm",{
-method:"POST",headers:headers(),
+method:"POST",
+headers:headers(),
 body:JSON.stringify({orderId:id,paymentId:paymentId||null})
 });
-if(!r.ok){alert("Payment update failed");return;}
-loadOrders();loadAll();
-}
 
-async function loadProducts(){
-const box=document.getElementById("productList");
-try{
-const r=await fetch("/api/products",{headers:headers()});
-if(!r.ok)throw new Error("Could not load products");
-const data=await r.json();
-box.innerHTML=data.map(p=>`<p><b>${escapeHTML(p.name)}</b> — ${escapeHTML(p.category)} — ₹${p.price}</p>`).join("")||"No products yet.";
-}catch(e){box.textContent=e.message;}
-}
-
-async function addProduct(){
-const name=document.getElementById("pname").value.trim();
-const category=document.getElementById("pcat").value.trim();
-const price=Number(document.getElementById("pprice").value);
-const image=document.getElementById("pimage").value.trim();
-
-if(!name||!category||!Number.isFinite(price)||price<=0){
-document.getElementById("productMsg").textContent="Enter valid product details.";
+if(!r.ok){
+alert("Payment update failed");
 return;
 }
 
-const r=await fetch("/api/products",{
-method:"POST",headers:headers(),
-body:JSON.stringify({name,category,price,image})
+loadOrders();
+loadAll();
+}
+
+// IMAGE PREVIEW
+
+function previewProductImage(event){
+
+const file=event.target.files[0];
+const preview=document.getElementById("imagePreview");
+const info=document.getElementById("imageInfo");
+
+if(!file)return;
+
+if(!file.type.startsWith("image/")){
+alert("Please select a valid image.");
+event.target.value="";
+preview.style.display="none";
+return;
+}
+
+if(file.size>5*1024*1024){
+alert("Image must be smaller than 5 MB.");
+event.target.value="";
+preview.style.display="none";
+return;
+}
+
+if(preview.dataset.objectUrl){
+URL.revokeObjectURL(preview.dataset.objectUrl);
+}
+
+const objectUrl=URL.createObjectURL(file);
+preview.dataset.objectUrl=objectUrl;
+preview.src=objectUrl;
+preview.style.display="block";
+
+info.textContent=file.name+" ("+(file.size/1024/1024).toFixed(2)+" MB)";
+}
+
+// CLOUDINARY PHOTO UPLOAD
+
+async function uploadProductImage(file){
+
+if(
+CLOUDINARY_CLOUD_NAME==="YOUR_CLOUD_NAME" ||
+CLOUDINARY_UPLOAD_PRESET==="YOUR_UPLOAD_PRESET"
+){
+throw new Error("Please configure Cloudinary Cloud Name and Upload Preset first.");
+}
+
+const formData=new FormData();
+
+formData.append("file",file);
+formData.append("upload_preset",CLOUDINARY_UPLOAD_PRESET);
+
+const response=await fetch(
+"https://api.cloudinary.com/v1_1/"+
+encodeURIComponent(CLOUDINARY_CLOUD_NAME)+
+"/image/upload",
+{
+method:"POST",
+body:formData
+}
+);
+
+const data=await response.json();
+
+if(!response.ok || !data.secure_url){
+throw new Error(data.error?.message||"Image upload failed.");
+}
+
+return data.secure_url;
+}
+
+// ADD PRODUCT
+
+async function addProduct(){
+
+const name=document.getElementById("pname").value.trim();
+const category=document.getElementById("pcat").value.trim();
+const price=Number(document.getElementById("pprice").value);
+const file=document.getElementById("pimage").files[0];
+
+const msg=document.getElementById("productMsg");
+const button=document.getElementById("addProductBtn");
+
+if(!name||!category||!Number.isFinite(price)||price<=0||!file){
+msg.textContent="Enter all product details and select a photo.";
+msg.className="error";
+return;
+}
+
+if(!file.type.startsWith("image/")||file.size>5*1024*1024){
+msg.textContent="Select a valid image smaller than 5 MB.";
+msg.className="error";
+return;
+}
+
+button.disabled=true;
+
+try{
+
+msg.textContent="Uploading photo...";
+msg.className="message";
+
+const image=await uploadProductImage(file);
+
+msg.textContent="Saving product...";
+
+const response=await fetch("/api/products",{
+method:"POST",
+headers:headers(),
+body:JSON.stringify({
+name,
+category,
+price,
+image
+})
 });
 
-if(!r.ok){document.getElementById("productMsg").textContent="Product could not be added.";return;}
+if(!response.ok){
+throw new Error("Product could not be saved.");
+}
 
-document.getElementById("productMsg").textContent="Product added!";
+msg.textContent="Product added successfully!";
+msg.className="message";
+
 document.getElementById("pname").value="";
 document.getElementById("pcat").value="";
 document.getElementById("pprice").value="";
 document.getElementById("pimage").value="";
+
+document.getElementById("imagePreview").style.display="none";
+document.getElementById("imageInfo").textContent="";
+
 loadProducts();
+
+}catch(error){
+
+msg.textContent=error.message;
+msg.className="error";
+
+}finally{
+button.disabled=false;
 }
+}
+
+// PRODUCT LIST
+
+async function loadProducts(){
+
+const box=document.getElementById("productList");
+
+try{
+
+const response=await fetch("/api/products",{headers:headers()});
+
+if(!response.ok)throw new Error("Could not load products");
+
+const data=await response.json();
+
+if(!data.length){
+box.textContent="No products yet.";
+return;
+}
+
+box.innerHTML=`<div class="table-wrap"><table>
+<tr><th>Photo</th><th>Name</th><th>Category</th><th>Price</th></tr>
+
+${data.map(p=>`
+<tr>
+<td>
+${p.image?`<img class="product-image" src="${escapeHTML(p.image)}" alt="Product" loading="lazy" onerror="this.style.display='none'">`:"No photo"}
+</td>
+<td>${escapeHTML(p.name)}</td>
+<td>${escapeHTML(p.category)}</td>
+<td>₹${escapeHTML(p.price)}</td>
+</tr>
+`).join("")}
+
+</table></div>`;
+
+}catch(e){
+box.textContent=e.message;
+}
+}
+
+// CUSTOMERS
 
 async function loadCustomers(){
+
 try{
+
 const data=await getOrders();
 const customers={};
+
 data.forEach(o=>{
-if(!customers[o.mobile])customers[o.mobile]={name:o.customer_name,mobile:o.mobile,count:0,total:0};
+
+if(!customers[o.mobile]){
+customers[o.mobile]={
+name:o.customer_name,
+mobile:o.mobile,
+count:0,
+total:0
+};
+}
+
 customers[o.mobile].count++;
 customers[o.mobile].total+=Number(o.total||0);
+
 });
-document.getElementById("customerList").innerHTML=`<table>
+
+document.getElementById("customerList").innerHTML=
+`<div class="table-wrap"><table>
 <tr><th>Name</th><th>Mobile</th><th>Orders</th><th>Total</th></tr>
-${Object.values(customers).map(c=>`<tr><td>${escapeHTML(c.name)}</td><td>${escapeHTML(c.mobile)}</td><td>${c.count}</td><td>₹${c.total}</td></tr>`).join("")}
-</table>`;
-}catch(e){document.getElementById("customerList").textContent=e.message;}
+
+${Object.values(customers).map(c=>`
+<tr>
+<td>${escapeHTML(c.name)}</td>
+<td>${escapeHTML(c.mobile)}</td>
+<td>${c.count}</td>
+<td>₹${c.total}</td>
+</tr>
+`).join("")}
+
+</table></div>`;
+
+}catch(e){
+document.getElementById("customerList").textContent=e.message;
 }
+}
+
+// PAYMENTS
 
 async function loadPayments(){
+
 try{
+
 const data=await getOrders();
-document.getElementById("paymentList").innerHTML=`<table>
-<tr><th>Order</th><th>Customer</th><th>Total</th><th>Status</th><th>Payment ID</th></tr>
-${data.map(o=>`<tr><td>#${o.id}</td><td>${escapeHTML(o.customer_name)}</td><td>₹${o.total}</td><td>${escapeHTML(o.payment_status)}</td><td>${escapeHTML(o.payment_id||"-")}</td></tr>`).join("")}
-</table>`;
-}catch(e){document.getElementById("paymentList").textContent=e.message;}
+
+document.getElementById("paymentList").innerHTML=
+`<div class="table-wrap"><table>
+<tr>
+<th>Order</th><th>Customer</th><th>Total</th>
+<th>Status</th><th>Payment ID</th>
+</tr>
+
+${data.map(o=>`
+<tr>
+<td>#${o.id}</td>
+<td>${escapeHTML(o.customer_name)}</td>
+<td>₹${o.total}</td>
+<td>${escapeHTML(o.payment_status)}</td>
+<td>${escapeHTML(o.payment_id||"-")}</td>
+</tr>
+`).join("")}
+
+</table></div>`;
+
+}catch(e){
+document.getElementById("paymentList").textContent=e.message;
+}
 }
 
-function loadAllPages(){
-loadAll();loadOrders();loadProducts();
-}
+// AUTO LOGIN
 
 function loadAllOnStart(){
-if(token){
+
+if(!token)return;
+
 fetch("/api/orders",{headers:headers()})
-.then(r=>{
-if(r.ok)openDashboard();
-else sessionStorage.removeItem("ramdevAdminToken");
+.then(response=>{
+if(response.ok){
+openDashboard();
+}else{
+sessionStorage.removeItem("ramdevAdminToken");
+token="";
+}
 })
 .catch(()=>{});
 }
-}
-
-function loadAll(){
-loadDashboardData();
-}
-
-async function loadDashboardData(){
-try{
-const data=await getOrders();
-document.getElementById("totalOrders").textContent=data.length;
-document.getElementById("revenue").textContent="₹"+data.reduce((s,o)=>s+Number(o.total||0),0).toLocaleString("en-IN");
-document.getElementById("pending").textContent=data.filter(o=>o.order_status==="new").length;
-document.getElementById("paid").textContent=data.filter(o=>o.payment_status==="paid").length;
-document.getElementById("recentOrders").innerHTML=data.slice(0,5).map(o=>`<p>#${o.id} — ${escapeHTML(o.customer_name)} — ₹${o.total}</p>`).join("")||"No orders yet.";
-}catch(e){
-document.getElementById("recentOrders").textContent=e.message;
-}
-}
 
 loadAllOnStart();
-</script>
 
+</script>
 </body>
 </html>
+
