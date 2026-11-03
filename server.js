@@ -12,7 +12,7 @@ const WHATSAPP = "918008564974";
 
 app.use(cors());
 app.use(express.json({limit:"2mb"}));
-app.use(express.static(path.join(__dirname, "..")));
+app.use(express.static(__dirname));
 
 const db = new Database(path.join(__dirname, "ramdev.db"));
 db.pragma("journal_mode = WAL");
