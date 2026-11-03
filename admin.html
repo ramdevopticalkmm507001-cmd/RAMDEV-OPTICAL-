@@ -24,10 +24,5 @@ const pi = document.getElementById("pi");
 function show(){loginEl.style.display="none";dash.style.display="block";loadOrders();loadProducts()}
 async function login(){token=document.getElementById("token").value.trim();let r=await fetch("/api/orders",{headers:H()});if(!r.ok){msg.textContent="Invalid token";return}sessionStorage.setItem("ramdevAdminToken",token);show()}
 function logout(){sessionStorage.removeItem("ramdevAdminToken");location.reload()}
-async function loadOrders(){let r=await fetch("/api/orders",{headers:H()}),d=await r.json();orders.innerHTML=d.length?`<table><tr><th>ID</th><th>Customer</th><th>Total</th><th>Payment</th><th>Status</th><th>Actions</th></tr>${d.map(o=>`<tr><td>#${o.id}</td><td>${o.customer_name}<br>${o.mobile}</td><td>₹${o.total}</td><td>${o.payment_status}</td><td>${o.order_status}</td><td><select onchange="setStatus(${o.id},this.value)"><option>new</option><option>confirmed</option><option>processing</option><option>shipped</option><option>delivered</option><option>cancelled</option></select><button onclick="paid(${o.id})">Mark paid</button></td></tr>`).join("")}</table>`:"No orders yet."}
-async function setStatus(id,s){await fetch("/api/orders/"+id+"/status",{method:"PATCH",headers:H(),body:JSON.stringify({order_status:s})});loadOrders()}
-async function paid(id){let paymentId=prompt("PhonePe payment/reference ID (optional):")||null;await fetch("/api/payments/admin-confirm",{method:"POST",headers:H(),body:JSON.stringify({orderId:id,paymentId})});loadOrders()}
-async function loadProducts(){let r=await fetch("/api/products",{headers:H()}),d=await r.json();products.innerHTML=d.map(p=>`<p><b>${p.name}</b> — ${p.category} — ₹${p.price}</p>`).join("")||"No products added in backend."}
-pf.onsubmit=async e=>{e.preventDefault();await fetch("/api/products",{method:"POST",headers:H(),body:JSON.stringify({name:pn.value,category:pc.value,price:pp.value,image:pi.value})});pf.reset();loadProducts()}
-if(token)show();
-</script></body></html>
+async function loadOrders(){let r=await 
+  
