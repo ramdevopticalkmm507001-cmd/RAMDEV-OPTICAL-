@@ -1,28 +1,327 @@
 <!doctype html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ramdev Opticals Admin</title>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ramdev Opticals Admin</title>
 <style>
-body{font-family:system-ui;margin:0;background:#f5f7fb;color:#172033}header{background:#111827;color:#fff;padding:18px 22px}main{max-width:1100px;margin:24px auto;padding:0 16px}.card{background:#fff;border-radius:15px;padding:18px;margin-bottom:18px;box-shadow:0 4px 18px #0001}input,select,button{padding:9px;border:1px solid #ddd;border-radius:8px;margin:4px}button{cursor:pointer}.danger{color:#b91c1c}.ok{color:#166534}table{width:100%;border-collapse:collapse}th,td{padding:9px;border-bottom:1px solid #eee;text-align:left}
-</style></head><body><header><b>RAMDEV OPTICALS — ADMIN</b></header><main>
-<div id="login" class="card"><h2>Admin Login</h2><input id="token" type="password" placeholder="ADMIN_TOKEN"><button onclick="login()">Login</button><p id="msg"></p></div>
-<div id="dash" style="display:none">
-<div class="card"><button onclick="logout()">Logout</button><h2>Orders</h2><div id="orders">Loading...</div></div>
-<div class="card"><h2>Add Product</h2><form id="pf"><input id="pn" placeholder="Name" required><input id="pc" placeholder="Category" required><input id="pp" type="number" placeholder="Price" required><input id="pi" placeholder="Image URL"><button>Add</button></form><div id="products"></div></div>
-</div></main>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f4f6fb;color:#172033}
+header{background:#111827;color:white;padding:18px;display:flex;justify-content:space-between;align-items:center}
+main{max-width:1100px;margin:25px auto;padding:15px}
+.box{background:white;padding:20px;border-radius:14px;margin-bottom:18px;box-shadow:0 3px 15px #0001}
+input,select,button{padding:11px;border:1px solid #ddd;border-radius:8px;margin:5px;max-width:100%}
+button{cursor:pointer;background:#2563eb;color:white;border:0}
+#login{max-width:400px;margin:100px auto}
+#login input{width:100%;margin:10px 0}
+#login button{width:100%}
+#dashboard{display:none}
+nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+nav button{flex:1}
+.page{display:none}
+.page.active{display:block}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.stat{background:#eef2ff;padding:18px;border-radius:10px}
+.stat b{display:block;font-size:25px;margin-top:8px}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:10px;border-bottom:1px solid #eee}
+.message{margin-top:10px;color:#166534}
+.error{color:#dc2626}
+@media(max-width:600px){.stats{grid-template-columns:1fr 1fr}main{padding:10px}.box{padding:12px}table{font-size:12px}}
+</style>
+</head>
+<body>
+
+<header>
+<b>👓 RAMDEV OPTICALS ADMIN</b>
+<button onclick="logout()">Logout</button>
+</header>
+
+<main>
+
+<div id="login" class="box">
+<h2>Admin Login</h2>
+<input id="token" type="password" placeholder="Enter ADMIN_TOKEN">
+<button onclick="login()">Login</button>
+<p id="loginMsg"></p>
+</div>
+
+<div id="dashboard">
+
+<nav>
+<button onclick="showPage('home')">Dashboard</button>
+<button onclick="showPage('orders')">Orders</button>
+<button onclick="showPage('products')">Products</button>
+<button onclick="showPage('customers')">Customers</button>
+<button onclick="showPage('payments')">Payments</button>
+</nav>
+
+<section id="home" class="page active">
+<h2>Dashboard</h2>
+<div class="stats">
+<div class="stat">Total Orders<b id="totalOrders">0</b></div>
+<div class="stat">Revenue<b id="revenue">₹0</b></div>
+<div class="stat">Pending<b id="pending">0</b></div>
+<div class="stat">Paid Orders<b id="paid">0</b></div>
+</div>
+<div class="box">
+<h3>Recent Orders</h3>
+<div id="recentOrders">Loading...</div>
+</div>
+</section>
+
+<section id="orders" class="page">
+<h2>All Orders</h2>
+<div class="box" id="ordersList">Loading...</div>
+</section>
+
+<section id="products" class="page">
+<h2>Manage Products</h2>
+<div class="box">
+<h3>Add New Product</h3>
+<input id="pname" placeholder="Product name">
+<input id="pcat" placeholder="Category">
+<input id="pprice" type="number" placeholder="Price">
+<input id="pimage" placeholder="Image URL">
+<button onclick="addProduct()">Add Product</button>
+<p id="productMsg"></p>
+</div>
+<div class="box">
+<h3>Product List</h3>
+<div id="productList">Loading...</div>
+</div>
+</section>
+
+<section id="customers" class="page">
+<h2>Customers</h2>
+<div class="box" id="customerList">Loading...</div>
+</section>
+
+<section id="payments" class="page">
+<h2>Payments</h2>
+<div class="box" id="paymentList">Loading...</div>
+</section>
+
+</div>
+</main>
+
 <script>
 let token=sessionStorage.getItem("ramdevAdminToken")||"";
-const H=()=>({"Content-Type":"application/json","Authorization":"Bearer "+token});
-  const loginEl = document.getElementById("login");
-const dash = document.getElementById("dash");
-const msg = document.getElementById("msg");
-const orders = document.getElementById("orders");
-const products = document.getElementById("products");
-const pf = document.getElementById("pf");
-const pn = document.getElementById("pn");
-const pc = document.getElementById("pc");
-const pp = document.getElementById("pp");
-const pi = document.getElementById("pi");
-function show(){loginEl.style.display="none";dash.style.display="block";loadOrders();loadProducts()}
-async function login(){token=document.getElementById("token").value.trim();let r=await fetch("/api/orders",{headers:H()});if(!r.ok){msg.textContent="Invalid token";return}sessionStorage.setItem("ramdevAdminToken",token);show()}
-function logout(){sessionStorage.removeItem("ramdevAdminToken");location.reload()}
-async function loadOrders(){let r=await 
-  
+
+function headers(){
+return {
+"Content-Type":"application/json",
+"Authorization":"Bearer "+token
+};
+}
+
+function login(){
+const value=document.getElementById("token").value.trim();
+const msg=document.getElementById("loginMsg");
+
+if(!value){
+msg.textContent="Please enter ADMIN_TOKEN";
+msg.className="error";
+return;
+}
+
+token=value;
+msg.textContent="Checking login...";
+
+fetch("/api/orders",{headers:headers()})
+.then(async response=>{
+if(!response.ok) throw new Error("Invalid admin token");
+sessionStorage.setItem("ramdevAdminToken",token);
+openDashboard();
+})
+.catch(error=>{
+msg.textContent=error.message;
+msg.className="error";
+});
+}
+
+function openDashboard(){
+document.getElementById("login").style.display="none";
+document.getElementById("dashboard").style.display="block";
+loadAll();
+}
+
+function logout(){
+sessionStorage.removeItem("ramdevAdminToken");
+location.reload();
+}
+
+function showPage(id){
+document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+document.getElementById(id).classList.add("active");
+if(id==="orders")loadOrders();
+if(id==="products")loadProducts();
+if(id==="customers")loadCustomers();
+if(id==="payments")loadPayments();
+}
+
+function escapeHTML(value){
+return String(value??"").replace(/[&<>"']/g,c=>({
+"&":"&amp;","<":"&lt;",">":"&gt;",
+'"':"&quot;","'":"&#39;"
+}[c]));
+}
+
+async function getOrders(){
+const response=await fetch("/api/orders",{headers:headers()});
+if(!response.ok)throw new Error("Could not load orders");
+return response.json();
+}
+
+async function loadAll(){
+try{
+const data=await getOrders();
+document.getElementById("totalOrders").textContent=data.length;
+document.getElementById("revenue").textContent="₹"+data.reduce((s,o)=>s+Number(o.total||0),0).toLocaleString("en-IN");
+document.getElementById("pending").textContent=data.filter(o=>o.order_status==="new").length;
+document.getElementById("paid").textContent=data.filter(o=>o.payment_status==="paid").length;
+document.getElementById("recentOrders").innerHTML=data.slice(0,5).map(o=>`<p>#${o.id} — ${escapeHTML(o.customer_name)} — ₹${o.total}</p>`).join("")||"No orders yet.";
+}catch(e){
+document.getElementById("recentOrders").textContent=e.message;
+}
+}
+
+async function loadOrders(){
+const box=document.getElementById("ordersList");
+try{
+const data=await getOrders();
+if(!data.length){box.textContent="No orders yet.";return;}
+box.innerHTML=`<table>
+<tr><th>ID</th><th>Customer</th><th>Total</th><th>Payment</th><th>Status</th><th>Action</th></tr>
+${data.map(o=>`<tr>
+<td>#${o.id}</td>
+<td>${escapeHTML(o.customer_name)}<br>${escapeHTML(o.mobile)}</td>
+<td>₹${o.total}</td>
+<td>${escapeHTML(o.payment_status)}</td>
+<td><select onchange="setStatus(${o.id},this.value)">
+${["new","confirmed","processing","shipped","delivered","cancelled"].map(s=>`<option ${s===o.order_status?"selected":""}>${s}</option>`).join("")}
+</select></td>
+<td><button onclick="markPaid(${o.id})">Mark Paid</button></td>
+</tr>`).join("")}</table>`;
+}catch(e){box.textContent=e.message;}
+}
+
+async function setStatus(id,status){
+const r=await fetch("/api/orders/"+id+"/status",{
+method:"PATCH",headers:headers(),
+body:JSON.stringify({order_status:status})
+});
+if(!r.ok){alert("Status update failed");return;}
+loadOrders();loadAll();
+}
+
+async function markPaid(id){
+const paymentId=prompt("Payment reference ID (optional):");
+if(paymentId===null)return;
+const r=await fetch("/api/payments/admin-confirm",{
+method:"POST",headers:headers(),
+body:JSON.stringify({orderId:id,paymentId:paymentId||null})
+});
+if(!r.ok){alert("Payment update failed");return;}
+loadOrders();loadAll();
+}
+
+async function loadProducts(){
+const box=document.getElementById("productList");
+try{
+const r=await fetch("/api/products",{headers:headers()});
+if(!r.ok)throw new Error("Could not load products");
+const data=await r.json();
+box.innerHTML=data.map(p=>`<p><b>${escapeHTML(p.name)}</b> — ${escapeHTML(p.category)} — ₹${p.price}</p>`).join("")||"No products yet.";
+}catch(e){box.textContent=e.message;}
+}
+
+async function addProduct(){
+const name=document.getElementById("pname").value.trim();
+const category=document.getElementById("pcat").value.trim();
+const price=Number(document.getElementById("pprice").value);
+const image=document.getElementById("pimage").value.trim();
+
+if(!name||!category||!Number.isFinite(price)||price<=0){
+document.getElementById("productMsg").textContent="Enter valid product details.";
+return;
+}
+
+const r=await fetch("/api/products",{
+method:"POST",headers:headers(),
+body:JSON.stringify({name,category,price,image})
+});
+
+if(!r.ok){document.getElementById("productMsg").textContent="Product could not be added.";return;}
+
+document.getElementById("productMsg").textContent="Product added!";
+document.getElementById("pname").value="";
+document.getElementById("pcat").value="";
+document.getElementById("pprice").value="";
+document.getElementById("pimage").value="";
+loadProducts();
+}
+
+async function loadCustomers(){
+try{
+const data=await getOrders();
+const customers={};
+data.forEach(o=>{
+if(!customers[o.mobile])customers[o.mobile]={name:o.customer_name,mobile:o.mobile,count:0,total:0};
+customers[o.mobile].count++;
+customers[o.mobile].total+=Number(o.total||0);
+});
+document.getElementById("customerList").innerHTML=`<table>
+<tr><th>Name</th><th>Mobile</th><th>Orders</th><th>Total</th></tr>
+${Object.values(customers).map(c=>`<tr><td>${escapeHTML(c.name)}</td><td>${escapeHTML(c.mobile)}</td><td>${c.count}</td><td>₹${c.total}</td></tr>`).join("")}
+</table>`;
+}catch(e){document.getElementById("customerList").textContent=e.message;}
+}
+
+async function loadPayments(){
+try{
+const data=await getOrders();
+document.getElementById("paymentList").innerHTML=`<table>
+<tr><th>Order</th><th>Customer</th><th>Total</th><th>Status</th><th>Payment ID</th></tr>
+${data.map(o=>`<tr><td>#${o.id}</td><td>${escapeHTML(o.customer_name)}</td><td>₹${o.total}</td><td>${escapeHTML(o.payment_status)}</td><td>${escapeHTML(o.payment_id||"-")}</td></tr>`).join("")}
+</table>`;
+}catch(e){document.getElementById("paymentList").textContent=e.message;}
+}
+
+function loadAllPages(){
+loadAll();loadOrders();loadProducts();
+}
+
+function loadAllOnStart(){
+if(token){
+fetch("/api/orders",{headers:headers()})
+.then(r=>{
+if(r.ok)openDashboard();
+else sessionStorage.removeItem("ramdevAdminToken");
+})
+.catch(()=>{});
+}
+}
+
+function loadAll(){
+loadDashboardData();
+}
+
+async function loadDashboardData(){
+try{
+const data=await getOrders();
+document.getElementById("totalOrders").textContent=data.length;
+document.getElementById("revenue").textContent="₹"+data.reduce((s,o)=>s+Number(o.total||0),0).toLocaleString("en-IN");
+document.getElementById("pending").textContent=data.filter(o=>o.order_status==="new").length;
+document.getElementById("paid").textContent=data.filter(o=>o.payment_status==="paid").length;
+document.getElementById("recentOrders").innerHTML=data.slice(0,5).map(o=>`<p>#${o.id} — ${escapeHTML(o.customer_name)} — ₹${o.total}</p>`).join("")||"No orders yet.";
+}catch(e){
+document.getElementById("recentOrders").textContent=e.message;
+}
+}
+
+loadAllOnStart();
+</script>
+
+</body>
+</html>
