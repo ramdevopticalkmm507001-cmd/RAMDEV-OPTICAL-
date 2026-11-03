@@ -128,7 +128,7 @@ app.patch("/api/orders/:id/status",requireAdmin,(req,res)=>{
   res.json(row);
 });
 
-app.get("/api/products",requireAdmin,(req,res)=>{
+app.get("/api/products",(req,res)=>{
   res.json(db.prepare("SELECT * FROM products WHERE active=1 ORDER BY id DESC").all());
 });
 
