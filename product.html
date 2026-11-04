@@ -1,9 +1,10 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Ramdev Opticals — Choose Lenses</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Choose Lenses | Ramdev Opticals</title>
 
 <style>
 *{box-sizing:border-box}
@@ -12,11 +13,11 @@ body{
   margin:0;
   font-family:Arial,sans-serif;
   background:#f5f7fb;
-  color:#172033
+  color:#172033;
 }
 
 header{
-  background:white;
+  background:#fff;
   padding:18px 6%;
   display:flex;
   justify-content:space-between;
@@ -24,100 +25,624 @@ header{
   border-bottom:1px solid #eee;
   position:sticky;
   top:0;
-  z-index:10
+  z-index:10;
 }
 
 .logo{
-  font-size:20px;
-  font-weight:800
-}
-
-.logo span{
-  color:#2563eb
-}
-
-header a{
+  font-size:21px;
+  font-weight:800;
   color:#172033;
   text-decoration:none;
+}
+
+.logo span{color:#2563eb}
+
+nav a{
+  text-decoration:none;
+  color:#172033;
+  margin-left:15px;
   font-weight:700;
-  margin-left:20px
 }
 
 .container{
   max-width:1100px;
   margin:30px auto;
-  padding:0 16px
+  padding:0 16px;
 }
 
 .product{
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:25px
+  gap:24px;
 }
 
 .card{
   background:white;
-  border-radius:18px;
-  padding:20px;
-  box-shadow:0 4px 20px #0001
+  padding:22px;
+  border-radius:17px;
+  box-shadow:0 4px 20px #0001;
 }
 
-.product-image{
-  width:100%;
-  height:430px;
-  object-fit:contain;
-  border-radius:14px;
-  background:#f1f5f9
-}
-
-.no-image{
-  height:430px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+.preview{
+  height:350px;
   background:#eef2ff;
+  border-radius:14px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
   font-size:100px;
-  border-radius:14px
+  overflow:hidden;
 }
 
-h1{
-  margin-top:0
+.preview img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
 }
+
+h1{margin-top:0}
 
 .price{
-  font-size:25px;
+  font-size:26px;
   font-weight:800;
-  margin:12px 0
+  color:#2563eb;
+  margin:12px 0;
 }
 
 label{
   display:block;
   font-weight:700;
-  margin-top:14px
+  margin-top:15px;
 }
 
-select,
-input{
+select,input{
   width:100%;
   padding:13px;
-  margin-top:6px;
-  border:1px solid #ddd;
+  border:1px solid #dbe0e8;
   border-radius:9px;
+  margin-top:7px;
+  background:white;
   font-size:15px;
-  background:white
 }
 
 .prescription{
   margin-top:20px;
-  padding:18px;
+  padding:16px;
   background:#f8fafc;
-  border-radius:14px;
-  border:1px solid #e2e8f0
+  border:1px solid #e2e8f0;
+  border-radius:13px;
 }
 
-.prescription h3{
-  margin-top:0
+.prescription h3{margin-top:0}
+
+.eyes{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
 }
 
 .eye{
-  margin
+  background:white;
+  padding:12px;
+  border:1px solid #e2e8f0;
+  border-radius:10px;
+}
+
+.eye h4{
+  margin:0 0 10px;
+  color:#2563eb;
+}
+
+.total{
+  margin-top:20px;
+  padding:18px;
+  border-radius:12px;
+  background:#eff6ff;
+  font-size:23px;
+  font-weight:800;
+}
+
+button{
+  width:100%;
+  border:0;
+  padding:15px;
+  margin-top:15px;
+  border-radius:10px;
+  background:#2563eb;
+  color:white;
+  font-size:16px;
+  font-weight:800;
+  cursor:pointer;
+}
+
+button:disabled{
+  opacity:.6;
+  cursor:not-allowed;
+}
+
+.note{
+  font-size:13px;
+  color:#64748b;
+  line-height:1.5;
+}
+
+#message{
+  margin-top:15px;
+  font-weight:700;
+}
+
+@media(max-width:750px){
+  .product{grid-template-columns:1fr}
+  .eyes{grid-template-columns:1fr 1fr}
+  .preview{height:280px}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <a href="index.html" class="logo">
+    RAMDEV <span>OPTICALS</span>
+  </a>
+
+  <nav>
+    <a href="index.html#products">Products</a>
+    <a href="index.html#cart">Cart</a>
+  </nav>
+</header>
+
+<div class="container">
+
+  <a href="index.html">← Back to Products</a>
+
+  <div class="product" style="margin-top:20px">
+
+    <!-- PRODUCT -->
+    <section class="card">
+
+      <div class="preview" id="preview">👓</div>
+
+      <h1 id="productName">Loading Product...</h1>
+
+      <p id="productType" class="note"></p>
+
+      <div class="price" id="framePrice">₹0</div>
+
+    </section>
+
+    <!-- LENS SELECTION -->
+    <section class="card">
+
+      <h2>Choose Your Lenses</h2>
+
+      <label>Lens Family</label>
+      <select id="family"></select>
+
+      <label>Lens Product</label>
+      <select id="lens"></select>
+
+      <label>Lens Price Option</label>
+      <select id="power"></select>
+
+      <div class="prescription">
+
+        <h3>Prescription Details</h3>
+
+        <p class="note">
+          Enter the prescription exactly as provided by your eye-care professional.
+        </p>
+
+        <div class="eyes">
+
+          <div class="eye">
+            <h4>Right Eye (OD)</h4>
+
+            <label>SPH</label>
+            <input id="rSph" placeholder="-2.00">
+
+            <label>CYL</label>
+            <input id="rCyl" placeholder="-1.00">
+
+            <label>AXIS</label>
+            <input id="rAxis" placeholder="90">
+
+            <label>ADD</label>
+            <input id="rAdd" placeholder="Optional">
+          </div>
+
+          <div class="eye">
+            <h4>Left Eye (OS)</h4>
+
+            <label>SPH</label>
+            <input id="lSph" placeholder="-2.00">
+
+            <label>CYL</label>
+            <input id="lCyl" placeholder="-1.00">
+
+            <label>AXIS</label>
+            <input id="lAxis" placeholder="90">
+
+            <label>ADD</label>
+            <input id="lAdd" placeholder="Optional">
+          </div>
+
+        </div>
+
+        <label>PD (Pupillary Distance)</label>
+        <input id="pd" placeholder="Example: 62 mm">
+
+      </div>
+
+      <p class="note">
+        Please double-check all prescription values before adding your glasses to cart.
+      </p>
+
+      <div class="total" id="total">
+        Total: ₹0
+      </div>
+
+      <button id="addBtn">
+        ADD TO CART
+      </button>
+
+      <p id="message"></p>
+
+    </section>
+
+  </div>
+</div>
+
+<script src="script.js"></script>
+
+<script>
+(function(){
+
+"use strict";
+
+const $ = id => document.getElementById(id);
+
+const formatMoney = value =>
+  "₹" + Number(value || 0).toLocaleString("en-IN");
+
+const catalog = [
+
+["Eyeconic Blue Cut",[
+["1.60 Eyeconic Dual",[1100,1200,1400,1900]],
+["1.56 Crystal Blue",[900,1000,1200,1600]],
+["1.60 Violet Dark Blue",[900,1000,1200,1600]],
+["1.56 Crystal Green",[900,1000,1200]],
+["1.60 Eyeconic Magenta Night Drive",[1000,1100,1300]]
+]],
+
+["ASH Blue Cut",[
+["ASH Blue Cut 1.60 HMC Green",[700,800,1200,2800]],
+["1.56 55MM Blue Cut HMC Green",[1500,1700,1800]]
+]],
+
+["Diamond Photochromic",[
+["1.56 Diamond Photogray HC",[1000,1200,1600,2200]],
+["1.56 Diamond Photogray HMC Green",[1600,1800,2200,2800]],
+["1.56 Sun-Sync Photogray HMC Blue Coat",[1800,2000,2400]]
+]],
+
+["Elite Photogray Blue Cut",[
+["1.56 Elite Single Vision Green Coat SHMC",[1600,2000,2200]],
+["1.56 Elite Round Top Blue Coat",[1800,2000,2400]],
+["1.56 Elite Progressive Blue Coat",[2500,2800,3000]]
+]],
+
+["White Progressive",[
+["1.56 Shield Progressive HC",[1000,1300,1300,1500,1700]],
+["1.56 Radiator Progressive HMC",[1300,1600,1600,1800,2000]],
+["1.59 Bullet Poly-Carbonate Progressive HMC Green Coat",[2500]]
+]],
+
+["Blue Cut Progressive",[
+["1.56 Blue Cut Progressive HMC Green Coat",[1600,1800,1800,2000,2200]],
+["1.56 Infinity Blue Cut Progressive HMC Blue Coat",[2100,2300,2300]]
+]],
+
+["Photogray Progressive",[
+["1.56 Super Shield Photogray Progressive HC",[1600,2000,2000,2400]],
+["1.56 Sun Radiator Photogray Progressive HMC",[2200,2600,2600,3000]]
+]],
+
+["White Round Top",[
+["1.56 White Round Top HC",[600,800,800,1000,1000,1000,1000,1200,1200]]
+]],
+
+["Photogray Round Top",[
+["1.56 Super Shield Photogray Round Top HC",[1000,1400,1200,1300,1500,1500,1500,1600]],
+["1.56 Sun Radiator Photogray Round Top HMC Green Coat",[1600,1800,2000,2200]]
+]],
+
+["Blue Cut Round Top HMC",[
+["Protector Blue Cut Round Top HMC Green Coat",[1000,1200,1300,1500,1700,1500,1700,1900]],
+["Infinity Blue Cut Round Top HMC Blue Coat",[1500,1700,1900,2100]]
+]],
+
+["High Powered Lenses",[
+["1.56 55MM Plus Thin Lenses",[600,800,1000,1200,800,1000,1200]],
+["1.56 Lenticular Plus Lenses",[1200,1400,600,950,1150,1350,1550,1750,600,900,1250,1450,1650,1850,2050,600,700]],
+["1.56 Diamond Minus Lenses",[900,1200,1550,1950,2150,2350,900,1000]]
+]]
+
+];
+
+let frame = null;
+let lensPrice = 0;
+let frameAmount = 0;
+
+function getProducts(){
+
+  try{
+    if(typeof products !== "undefined" && Array.isArray(products)){
+      return products;
+    }
+  }catch(e){}
+
+  return [];
+}
+
+function getItemId(item){
+  return Number(item.id ?? item.product_id);
+}
+
+function showFrame(){
+
+  const params = new URLSearchParams(location.search);
+  const id = Number(params.get("id")) || 1;
+
+  const list = getProducts();
+
+  frame = list.find(item => getItemId(item) === id) || list[0];
+
+  if(!frame){
+    $("productName").textContent = "Product not found";
+    $("productType").textContent =
+      "Please return to the products page and select a product.";
+    $("addBtn").disabled = true;
+    return false;
+  }
+
+  frameAmount = Number(frame.price || 0);
+
+  $("productName").textContent = frame.name || "Eyewear";
+  $("productType").textContent =
+    frame.category || frame.type || "";
+
+  $("framePrice").textContent = formatMoney(frameAmount);
+
+  const preview = $("preview");
+
+  if(frame.image){
+    const img = document.createElement("img");
+    img.src = frame.image;
+    img.alt = frame.name || "Eyewear";
+    img.onerror = () => {
+      preview.textContent = frame.icon || "👓";
+    };
+    preview.innerHTML = "";
+    preview.appendChild(img);
+  }else{
+    preview.textContent = frame.icon || "👓";
+  }
+
+  return true;
+}
+
+function fillFamilies(){
+
+  $("family").innerHTML = "";
+
+  catalog.forEach((item,index)=>{
+    const option = document.createElement("option");
+    option.value = index;
+    option.textContent = item[0];
+    $("family").appendChild(option);
+  });
+
+  fillLenses();
+}
+
+function fillLenses(){
+
+  const familyIndex = Number($("family").value);
+  const familyData = catalog[familyIndex];
+
+  $("lens").innerHTML = "";
+
+  familyData[1].forEach((item,index)=>{
+    const option = document.createElement("option");
+    option.value = index;
+    option.textContent = item[0];
+    $("lens").appendChild(option);
+  });
+
+  fillPower();
+}
+
+function fillPower(){
+
+  const familyIndex = Number($("family").value);
+  const lensIndex = Number($("lens").value);
+
+  const prices = catalog[familyIndex][1][lensIndex][1];
+
+  $("power").innerHTML = "";
+
+  prices.forEach((price,index)=>{
+
+    const option = document.createElement("option");
+
+    option.value = index;
+    option.textContent =
+      "Option " + (index+1) + " — " + formatMoney(price);
+
+    $("power").appendChild(option);
+
+  });
+
+  calculateTotal();
+}
+
+function calculateTotal(){
+
+  const familyIndex = Number($("family").value);
+  const lensIndex = Number($("lens").value);
+  const powerIndex = Number($("power").value);
+
+  const selectedLens = catalog[familyIndex][1][lensIndex];
+
+  lensPrice = Number(selectedLens[1][powerIndex] || 0);
+
+  $("total").textContent =
+    "Total: " + formatMoney(frameAmount + lensPrice);
+
+}
+
+function getPrescription(){
+
+  return {
+
+    rightEye:{
+      sph:$("rSph").value.trim(),
+      cyl:$("rCyl").value.trim(),
+      axis:$("rAxis").value.trim(),
+      add:$("rAdd").value.trim()
+    },
+
+    leftEye:{
+      sph:$("lSph").value.trim(),
+      cyl:$("lCyl").value.trim(),
+      axis:$("lAxis").value.trim(),
+      add:$("lAdd").value.trim()
+    },
+
+    pd:$("pd").value.trim()
+
+  };
+
+}
+
+function addToCart(){
+
+  if(!frame){
+    alert("Product not found.");
+    return;
+  }
+
+  const familyIndex = Number($("family").value);
+  const lensIndex = Number($("lens").value);
+  const powerIndex = Number($("power").value);
+
+  const selectedFamily = catalog[familyIndex];
+  const selectedLens = selectedFamily[1][lensIndex];
+
+  const totalPrice = frameAmount + lensPrice;
+
+  const prescription = getPrescription();
+
+  const item = {
+
+    key:Date.now(),
+
+    id:frame.id || frame.product_id || null,
+
+    name:frame.name || "Eyewear",
+
+    frameName:frame.name || "Eyewear",
+
+    frame:frame.name || "Eyewear",
+
+    category:frame.category || frame.type || "",
+
+    image:frame.image || "",
+
+    framePrice:frameAmount,
+
+    lensFamily:selectedFamily[0],
+
+    lensProduct:selectedLens[0],
+
+    lens:selectedLens[0],
+
+    lensPowerOption:"Option " + (powerIndex+1),
+
+    lensPrice:lensPrice,
+
+    prescription:prescription,
+
+    total:totalPrice,
+
+    totalPrice:totalPrice,
+
+    price:totalPrice,
+
+    quantity:1,
+
+    qty:1
+
+  };
+
+  try{
+
+    const oldCart = JSON.parse(
+      localStorage.getItem("ramdevCartV3") || "[]"
+    );
+
+    if(!Array.isArray(oldCart)){
+      throw new Error("Invalid cart");
+    }
+
+    oldCart.push(item);
+
+    localStorage.setItem(
+      "ramdevCartV3",
+      JSON.stringify(oldCart)
+    );
+
+    $("message").style.color = "#15803d";
+    $("message").textContent =
+      "Added to cart successfully!";
+
+    $("addBtn").disabled = true;
+    $("addBtn").textContent = "ADDED TO CART";
+
+    setTimeout(()=>{
+      location.href = "index.html#cart";
+    },800);
+
+  }catch(error){
+
+    $("message").style.color = "#dc2626";
+    $("message").textContent =
+      "Could not save cart. Please try again.";
+
+    console.error(error);
+
+  }
+
+}
+
+function start(){
+
+  if(!showFrame()) return;
+
+  fillFamilies();
+
+  $("family").addEventListener("change",fillLenses);
+  $("lens").addEventListener("change",fillPower);
+  $("power").addEventListener("change",calculateTotal);
+  $("addBtn").addEventListener("click",addToCart);
+
+}
+
+start();
+
+})();
+</script>
+
+</body>
+</html>
